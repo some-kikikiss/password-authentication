@@ -3,7 +3,7 @@ package generator
 import (
 	"crypto/rand"
 	"errors"
-	"fmt"
+	"log"
 	"math/big"
 	"strconv"
 	"strings"
@@ -41,12 +41,12 @@ type Config struct {
 }
 
 func (config *Config) String() string {
-	return "length (-l;--length) : " + strconv.Itoa(int(config.Length)) + "\n" +
-		"with symbols (-s;--symbols) : " + strconv.FormatBool(config.WithSymbols) + "\n" +
-		"with numbers (-n;--numbers) : " + strconv.FormatBool(config.WithNumbers) + "\n" +
-		"with UpperLetters (-u;--upper): " + strconv.FormatBool(config.WithUpperLetters) + "\n" +
-		"with English alphabet (-e;--eng: " + strconv.FormatBool(config.WithEngLang) + "\n" +
-		"with Russian alphabet (-e;--ru): " + strconv.FormatBool(config.WithEngLang) + "\n"
+	return "length : " + strconv.Itoa(int(config.Length)) + "\n" +
+		"with symbols : " + strconv.FormatBool(config.WithSymbols) + "\n" +
+		"with numbers : " + strconv.FormatBool(config.WithNumbers) + "\n" +
+		"with UpperLetters : " + strconv.FormatBool(config.WithUpperLetters) + "\n" +
+		"with English alphabet : " + strconv.FormatBool(config.WithEngLang) + "\n" +
+		"with Russian alphabet : " + strconv.FormatBool(config.WithRusLang) + "\n"
 }
 
 type Generator struct {
@@ -55,18 +55,24 @@ type Generator struct {
 
 func New(config *Config) (*Generator, error) {
 	if config == nil {
-		fmt.Println("Use a default config")
+		log.Printf("Empty config! Using a default config : %s", DefaultConfig.String())
 		config = &DefaultConfig
 	}
 	if !config.WithSymbols && !config.WithNumbers && !config.WithUpperLetters &&
 		!config.WithEngLang && !config.WithRusLang {
+		log.Printf("empty params for config : %s", config)
 		config = &DefaultConfig
 	}
 	if config.Length < 8 {
-		config.Length = 8
+		log.Printf("password length is too short (%x), use a default lenght (%x)", config.Length, DefaultConfig.Length)
+		config.Length = DefaultConfig.Length
 		//return nil, ErrShortLength
 	}
 	config.Alphabet = CreateAlphabet(config)
+	if int(config.Length) >= len(config.Alphabet) {
+		log.Printf("password length is longer than alphabet (%x), use a 1/8 of alphabet length (%x)", config.Length, len(config.Alphabet)/8)
+		config.Length = uint(len(config.Alphabet) / 8)
+	}
 	return &Generator{Config: config}, nil
 }
 

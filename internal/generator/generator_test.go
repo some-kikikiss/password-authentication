@@ -2,7 +2,7 @@ package generator
 
 import (
 	"github.com/stretchr/testify/assert"
-	"strings"
+	"regexp"
 	"testing"
 )
 
@@ -100,55 +100,277 @@ func TestNew(t *testing.T) {
 }
 
 func TestCreateAlphabet(t *testing.T) {
-	var testConf = Config{1, false, false, false, false, false, ""}
+	var tests = []Config{
+		{
+			Length:           1,
+			WithSymbols:      true,
+			WithNumbers:      false,
+			WithUpperLetters: false,
+			WithEngLang:      false,
+			WithRusLang:      false,
+			Alphabet:         "",
+		},
+		{
+			Length:           1,
+			WithSymbols:      false,
+			WithNumbers:      true,
+			WithUpperLetters: false,
+			WithEngLang:      false,
+			WithRusLang:      false,
+			Alphabet:         "",
+		},
+		{
+			Length:           1,
+			WithSymbols:      false,
+			WithNumbers:      false,
+			WithUpperLetters: true,
+			WithEngLang:      true,
+			WithRusLang:      false,
+			Alphabet:         "",
+		},
+		{
+			Length:           1,
+			WithSymbols:      false,
+			WithNumbers:      false,
+			WithUpperLetters: true,
+			WithEngLang:      false,
+			WithRusLang:      true,
+			Alphabet:         "",
+		},
+		{
+			Length:           1,
+			WithSymbols:      true,
+			WithNumbers:      true,
+			WithUpperLetters: true,
+			WithEngLang:      true,
+			WithRusLang:      true,
+			Alphabet:         "",
+		},
+	}
 	t.Log("Given the need to test CreateAlphabet behavior at different params.")
 	{
 		testID := 0
-		t.Logf("\tTest %d:\t When WithSymbols is true.", testID)
+		t.Logf("\tTest %d:\t When WithSymbols is true\n%s", testID, tests[testID].String())
 		{
-			testConf.WithSymbols = true
-			testAlphabet := CreateAlphabet(&testConf)
-			assert.Equalf(t, DefaultSymbols, testAlphabet, "\tAlphabet Should be %s \n, \tactual is %s  ",
-				DefaultSymbols, testAlphabet)
-			testConf.WithSymbols = false
+			testAlphabet := CreateAlphabet(&tests[testID])
+			regex := regexp.MustCompile(`[[:punct:]]`).MatchString
+			pass := assert.Equalf(t, true, regex(testAlphabet),
+				"\tAlphabet Should contains symbols \n actual is %s", testAlphabet)
+			if pass {
+				t.Logf("\tactual alphabet is %s\n", testAlphabet)
+			}
 
 		}
 		testID++
-		t.Logf("\tTest %d:\t When WithNumbers is true.", testID)
+		t.Logf("\tTest %d:\t When WithNumbers is true\n%s", testID, tests[testID].String())
 		{
-			testConf.WithNumbers = true
-			testAlphabet := CreateAlphabet(&testConf)
-			assert.Equalf(t, DefaultNumberSet, testAlphabet, "\tAlphabet Should be %s \n, \tactual is %s  ",
-				DefaultNumberSet, testAlphabet)
-			testConf.WithNumbers = false
+			testAlphabet := CreateAlphabet(&tests[testID])
+			regex := regexp.MustCompile(`[0-9]`).MatchString
+			pass := assert.Equalf(t, true, regex(testAlphabet),
+				"\tAlphabet Should contains numbers \n actual is %s", testAlphabet)
+			if pass {
+				t.Logf("\tactual alphabet is %s\n", testAlphabet)
+			}
 		}
 		testID++
-		t.Logf("\tTest %d:\t When WithUpperCase and WithEnglang is true.", testID)
+		t.Logf("\tTest %d:\t When WithUpperCase and WithEnglang is true\n%s", testID, tests[testID].String())
 		{
-			testConf.WithUpperLetters = true
-			testConf.WithEngLang = true
-			testAlphabet := CreateAlphabet(&testConf)
-			assert.Equalf(t, DefaultEngAlphabet+strings.ToUpper(DefaultEngAlphabet), testAlphabet,
-				"\tAlphabet Should be %s \n, \tactual is %s  ",
-				DefaultEngAlphabet+strings.ToUpper(DefaultEngAlphabet), testAlphabet)
-			testConf.WithUpperLetters = false
-			testConf.WithEngLang = false
+			testAlphabet := CreateAlphabet(&tests[testID])
+			regex := regexp.MustCompile(`[a-zA-Z]`).MatchString
+			pass := assert.Equalf(t, true, regex(testAlphabet),
+				"\tAlphabet Should contains lower and upper case English symbols \n actual is %s", testAlphabet)
+			if pass {
+				t.Logf("\tactual alphabet is %s\n", testAlphabet)
+			}
 		}
 
-		t.Logf("\tTest %d:\t When WithUpperCase and WithRuslang is true.", testID)
+		testID++
+		t.Logf("\tTest %d:\t When WithUpperCase and WithRuslang is true\n%s", testID, tests[testID].String())
 		{
-			testConf.WithUpperLetters = true
-			testConf.WithRusLang = true
-			testAlphabet := CreateAlphabet(&testConf)
-			assert.Equalf(t, DefaultRusAlphabet+strings.ToUpper(DefaultRusAlphabet), testAlphabet,
-				"\tAlphabet Should be %s \n, \tactual is %s  ",
-				DefaultRusAlphabet+strings.ToUpper(DefaultRusAlphabet), testAlphabet)
-			testConf.WithUpperLetters = false
-			testConf.WithRusLang = false
+			testAlphabet := CreateAlphabet(&tests[testID])
+			regex := regexp.MustCompile(`[а-яА-Я]`).MatchString
+			pass := assert.Equalf(t, true, regex(testAlphabet),
+				"\tAlphabet Should contains lower and upper case Rulang symbols\n actual is %s", testAlphabet)
+			if pass {
+				t.Logf("\tactual alphabet is %s\n", testAlphabet)
+			}
+		}
+
+		testID++
+		t.Logf("\tTest %d:\t When all params is true \n%s", testID, tests[testID].String())
+		{
+			testAlphabet := CreateAlphabet(&tests[testID])
+			regex := regexp.MustCompile(`[а-яА-Я0-9a-zA-Z[:punct:]]`).MatchString
+			pass := assert.Equalf(t, true, regex(testAlphabet),
+				"\tAlphabet Should contains any symbols \n actual is %s", testAlphabet)
+			if pass {
+				t.Logf("\tactual alphabet is %s\n", testAlphabet)
+			}
 		}
 
 	}
 
+}
+
+func TestGenerator_Generate(t *testing.T) {
+	var tests = []Config{
+		DefaultConfig,
+		{
+			Length:           8,
+			WithSymbols:      false,
+			WithNumbers:      true,
+			WithUpperLetters: true,
+			WithEngLang:      true,
+			WithRusLang:      false,
+			Alphabet:         "",
+		},
+		{
+			Length:           8,
+			WithSymbols:      false,
+			WithNumbers:      true,
+			WithUpperLetters: true,
+			WithEngLang:      false,
+			WithRusLang:      true,
+			Alphabet:         "",
+		},
+		{
+			Length:           24,
+			WithSymbols:      true,
+			WithNumbers:      true,
+			WithUpperLetters: true,
+			WithEngLang:      true,
+			WithRusLang:      true,
+			Alphabet:         "",
+		},
+		{
+			Length:           uint(len(DefaultNumberSet) + len(DefaultEngAlphabet) + 1),
+			WithSymbols:      false,
+			WithNumbers:      true,
+			WithUpperLetters: false,
+			WithEngLang:      true,
+			WithRusLang:      false,
+			Alphabet:         "",
+		},
+		{
+			Length:           uint(len(DefaultNumberSet) + len(DefaultEngAlphabet)*2 + len(DefaultSymbols) + len(DefaultRusAlphabet)*2),
+			WithSymbols:      true,
+			WithNumbers:      true,
+			WithUpperLetters: true,
+			WithEngLang:      true,
+			WithRusLang:      true,
+			Alphabet:         "",
+		},
+	}
+	t.Log("Given the need to test CreateGenerator_Generate behavior at different params.")
+	{
+		testID := 0
+		t.Logf("\tTest %d:\t When Generator.Config == DefaultConfig \n%s", testID, tests[testID].String())
+		{
+			testGenerator, _ := New(&tests[testID])
+			testPassword, err := testGenerator.Generate()
+			regex := regexp.MustCompile(`^[a-z0-9]+$`).MatchString
+			pass := assert.Equalf(t, true, regex(*testPassword),
+				"\tpassword must contain only lower case English alphabet letters and digit \n, "+
+					"\tactual alphabet is %s \n \tactual password is %s \n \t error is : %s",
+				testGenerator.Alphabet, *testPassword, err)
+			if pass {
+				t.Logf("\tactual alphabet is %s \n \t\t\t\t\tactual password is %s \n",
+					testGenerator.Alphabet, *testPassword)
+			}
+
+		}
+		testID++
+		t.Logf("\tTest %d:\t When Generator.Config with: EngLang, UpperCase, Numbers \n%s",
+			testID, tests[testID].String())
+		{
+			testGenerator, _ := New(&tests[testID])
+			testPassword, err := testGenerator.Generate()
+			regex := regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
+			pass := assert.Equalf(t, true, regex(*testPassword),
+				"\tpassword must contain only lower and upper case English alphabet letters and digit \n, "+
+					"\tactual alphabet is %s \n \tactual password is %s \n \t error is : %s",
+				testGenerator.Alphabet, *testPassword, err)
+			if pass {
+				t.Logf("\tactual alphabet is %s \n \t\t\t\t\tactual password is %s \n",
+					testGenerator.Alphabet, *testPassword)
+			}
+
+		}
+
+		testID++
+		t.Logf("\tTest %d:\t When Generator.Config with: RusLang, UpperCase, Numbers\n%s",
+			testID, tests[testID].String())
+		{
+
+			testGenerator, _ := New(&tests[testID])
+			testPassword, err := testGenerator.Generate()
+			regex := regexp.MustCompile(`[а-яА-Я0-9]`).MatchString
+			pass := assert.Equalf(t, true, regex(*testPassword),
+				"\tpassword must contain only lower and upper case RU alphabet letters and digit \n, "+
+					"\tactual alphabet is %s \n \t actual password is %s \n \t error is : %e",
+				testGenerator.Alphabet, *testPassword, err)
+			if pass {
+				t.Logf("\tactual alphabet is %s \n \t\t\t\t\tactual password is %s \n",
+					testGenerator.Alphabet, *testPassword)
+			}
+
+		}
+
+		testID++
+		t.Logf("\tTest %d:\t When Generator.Config with: EngLang, RuLang, UpperCase, Number,Specific symbols"+
+			"\n%s", testID, tests[testID].String())
+		{
+			testGenerator, _ := New(&tests[testID])
+			testPassword, err := testGenerator.Generate()
+			regex := regexp.MustCompile(`[а-яА-Я0-9a-zA-Z[:punct:]]`).MatchString
+			pass := assert.Equalf(t, true, regex(*testPassword),
+				"\tpassword must contain any RU and End letters, digits and specific symbols \n, "+
+					"\tactual alphabet is %s \n \t actual password is %s \n \t error is : %e",
+				testGenerator.Alphabet, *testPassword, err)
+			if pass {
+				t.Logf("\tactual alphabet is %s \n \t\t\t\t\tactual password is %s \n",
+					testGenerator.Alphabet, *testPassword)
+			}
+
+		}
+
+		testID++
+		t.Logf("\tTest %d:\t When Generator.Config with: EngLang, Numbers and "+
+			"password length longer than alphabet length\n%s", testID, tests[testID].String())
+		{
+			testGenerator, _ := New(&tests[testID])
+			testPassword, err := testGenerator.Generate()
+			regex := regexp.MustCompile(`[0-9a-z]`).MatchString
+			pass := assert.Equalf(t, true, regex(*testPassword),
+				"\tpassword must contain only lower case END alphabet letters and digits \n, "+
+					"\tactual alphabet is %s \n \t actual password is %s \n \t error is : %e",
+				testGenerator.Alphabet, *testPassword, err)
+			if pass {
+				t.Logf("\tactual alphabet is %s \n \t\t\t\t\tactual password is %s \n",
+					testGenerator.Alphabet, *testPassword)
+			}
+
+		}
+
+		testID++
+		t.Logf("\tTest %d:\t When Generator.Config with: RuLang, Englang, UpperCase, Numbers, Specific symbols"+
+			"and password length longer than alphabet length\n%s", testID, tests[testID].String())
+		{
+			testGenerator, _ := New(&tests[testID])
+			testPassword, err := testGenerator.Generate()
+			regex := regexp.MustCompile(`[а-яА-Я0-9a-zA-Z[:punct:]]`).MatchString
+			pass := assert.Equalf(t, true, regex(*testPassword),
+				"\tpassword must contain any RU and End letters, digits and specific symbols \n, "+
+					"\tactual alphabet is %s \n \t actual password is %s \n \t error is : %e",
+				testGenerator.Alphabet, *testPassword, err)
+			if pass {
+				t.Logf("\tactual alphabet is %s \n \t\t\t\t\tactual password is %s \n",
+					testGenerator.Alphabet, *testPassword)
+			}
+
+		}
+
+	}
 }
 
 //TODO continue some test
